@@ -136,14 +136,21 @@ class SignatureHelper extends CypherCmdParserListener {
 export function signatureHelp(
   fullQuery: string,
   dbSchema: DbSchema,
-  caretPosition: number,
+  caretPosition: number = fullQuery.length,
 ): SignatureHelp {
   let result: SignatureHelp = emptyResult;
+  /* We need the token inmediately before the caret
+  
+      CALL something(
+                     ^
+     because in this case what gives us information on where we are 
+     in the procedure is not the space at the caret, but the opening (                
+  */
+  const prevCaretPosition = caretPosition - 1;
 
-  // TODO Is this check needed
-  if (caretPosition > 0) {
+  if (prevCaretPosition > 0) {
     const parserResult = parserWrapper.parse(fullQuery);
-    const caret = findCaret(parserResult, caretPosition);
+    const caret = findCaret(parserResult, prevCaretPosition);
 
     if (caret) {
       const statement = caret.statement;
