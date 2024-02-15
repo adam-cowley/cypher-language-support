@@ -23,6 +23,7 @@ export {
 export { signatureHelp } from './signatureHelp';
 export { testData } from './tests/testData';
 export { CypherLexer, CypherParser };
+export { Neo4jProcedure, Neo4jFunction } from './types'
 
 import CypherLexer from './generated-parser/CypherCmdLexer';
 import CypherParser from './generated-parser/CypherCmdParser';

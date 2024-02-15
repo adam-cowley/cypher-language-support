@@ -5,7 +5,8 @@
 import { DiagnosticSeverity } from 'vscode-languageserver-types';
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
-import { semanticAnalysis } from './semanticAnalysis';
+import { semanticAnalysis, updateSignatureResolver } from './semanticAnalysis';
+import { DbSchema } from '../../dbSchema';
 
 export interface SemanticAnalysisResult {
   errors: SemanticAnalysisElement[];
@@ -26,9 +27,11 @@ type SemanticAnalysisElementNoSeverity = Omit<
   'severity'
 >;
 
-export function wrappedSemanticAnalysis(query: string): SemanticAnalysisResult {
+export function wrappedSemanticAnalysis(query: string, dbSchema: DbSchema): SemanticAnalysisResult {
   try {
     let semanticErrorsResult = undefined;
+    console.log(dbSchema.rawProcedures)
+    updateSignatureResolver({procedures: dbSchema.rawProcedures, functions: dbSchema.rawFunctions})
     semanticAnalysis([query], (a) => {
       semanticErrorsResult = a;
     });
@@ -58,6 +61,7 @@ export function wrappedSemanticAnalysis(query: string): SemanticAnalysisResult {
       })),
     };
   } catch (e) {
+    console.log(e)
     /* Ignores exceptions if they happen calling the semantic analysis. Should not happen but this is just defensive in case it did */
     return { errors: [], notifications: [] };
   }

@@ -1,10 +1,11 @@
-import { validateSyntax } from '@neo4j-cypher/language-support';
+import { validateSemantics, validateSyntax } from '@neo4j-cypher/language-support';
 import debounce from 'lodash.debounce';
 import { join } from 'path';
 import { Diagnostic, TextDocumentChangeEvent } from 'vscode-languageserver';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import workerpool from 'workerpool';
 import { LinterTask, LintWorker } from './lint-worker';
+import { Neo4jSchemaPoller } from '@neo4j-cypher/schema-poller';
 
 const pool = workerpool.pool(join(__dirname, 'lint-worker.js'), {
   minWorkers: 2,
@@ -16,6 +17,7 @@ let lastSemanticJob: LinterTask | undefined;
 async function rawLintDocument(
   change: TextDocumentChangeEvent<TextDocument>,
   sendDiagnostics: (diagnostics: Diagnostic[]) => void,
+  neo4j: Neo4jSchemaPoller,
 ) {
   const { document } = change;
 
@@ -25,19 +27,22 @@ async function rawLintDocument(
     return;
   }
 
-  const syntaxErrors = validateSyntax(query, {});
+  const dbSchema = neo4j.metadata?.dbSchema ?? {}
+  const syntaxErrors = validateSyntax(query, dbSchema);
 
   sendDiagnostics(syntaxErrors);
 
   if (syntaxErrors.length === 0) {
     try {
-      if (lastSemanticJob !== undefined && !lastSemanticJob.resolved) {
-        void lastSemanticJob.cancel();
-      }
+      // if (lastSemanticJob !== undefined && !lastSemanticJob.resolved) {
+      //   void lastSemanticJob.cancel();
+      // }
 
-      const proxyWorker = (await pool.proxy()) as unknown as LintWorker;
-      lastSemanticJob = proxyWorker.validateSemantics(query);
-      const result = await lastSemanticJob;
+      // const proxyWorker = (await pool.proxy()) as unknown as LintWorker;
+      // lastSemanticJob = proxyWorker.validateSemantics(query, dbSchema);
+      // const result = await lastSemanticJob;
+
+      const result = validateSemantics(query, dbSchema)
 
       sendDiagnostics(result);
     } catch (err) {

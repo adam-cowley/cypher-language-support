@@ -80,6 +80,10 @@ function ons_MainNodejs_main($args) {
 ```js
     // Initialize everything
     $rt_exports.main([]);
+
+    // Export the signature registry updater
+    $rt_exports.updateSignatureResolver = cnsa_Main_updateSignatureResolver;
+
     // Export the analyze function as well
     $rt_exports.semanticAnalysis = $rt_mainStarter(($args) => cnsa_Main_analyzeQuery($args.data[0]));
 }));
